@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Modern History page: search, export, interactive View modal (no Replay) -->
+<style>
+:root{
+  --accent:#e63946;
+  --muted:#6b7280;
+  --glass: rgba(255,255,255,0.94);
+}
+.container { max-width:1100px; }
+
+/* header */
+.page-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; }
+.page-head h2 { font-size:1.25rem; font-weight:800; margin:0; }
+.small-muted { color:var(--muted); font-size:.95rem; }
+
+/* glass card */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  border-radius:14px;
+  padding:1rem;
+  box-shadow: 0 16px 48px rgba(15,23,42,0.06);
+  border:1px solid rgba(15,23,42,0.03);
+}
+
+/* controls row */
+.controls { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+.controls .form-control { min-width:220px; }
+
+/* table */
+.table-wrap { overflow-x:auto; border-radius:10px; }
+.history-table { width:100%; border-collapse:collapse; }
+.history-table thead th { text-align:left; font-weight:700; padding:.7rem .9rem; font-size:.92rem; color:#222; border-bottom:1px solid rgba(0,0,0,0.06); background:transparent; }
+.history-table tbody td { padding:.65rem .9rem; border-bottom:1px solid rgba(0,0,0,0.03); vertical-align:middle; }
+.badge-risk { background: #ffe9e9; color:#b91c1c; padding:.35rem .55rem; border-radius:999px; font-weight:700; font-size:.86rem; }
+.badge-safe { background: #f0fdf4; color:#136f3a; padding:.35rem .55rem; border-radius:999px; font-weight:700; font-size:.86rem; }
+
+/* small actions */
+.row-actions button { margin-left:6px; }
+
+/* pagination */
+.pagination { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+
+/* empty state */
+.empty { padding:2rem; text-align:center; color:var(--muted); }
+
+/* responsive tweaks */
+@media (max-width:720px){
+  .controls .form-control { min-width:unset; width:100%; }
+  .page-head { flex-direction:column; align-items:flex-start; gap:8px; }
+}
+
+/* Modal custom */
+.modal-body .split {
+  display:flex; gap:18px;
+}
+@media (max-width:900px){ .modal-body .split { flex-direction:column; } }
+
+.feature-table { width:100%; border-collapse:collapse; font-size:.95rem; }
+.feature-table td { padding:.45rem .5rem; border-bottom:1px dashed rgba(0,0,0,0.04); }
+.feature-table td.key { font-weight:700; color:#111; width:40%; }
+.feature-table td.value { font-family:monospace; color:#333; cursor:pointer; }
+
+.json-panel {
+  background:#fafafa; border-radius:8px; padding:12px; max-height:46vh; overflow:auto; font-family:monospace; font-size:0.92rem;
+}
+
+/* small helper text */
+.helper { font-size:.85rem; color:var(--muted); margin-top:6px; }
+.copy-hint { font-size:.82rem; color:#666; margin-top:6px; }
+
+/* action row inside modal */
+.modal-actions { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:8px; }
+</style>
+
+<div class="container mt-3" data-aos="fade-up">
+  <div class="page-head">
+    <div>
+      <h2>History</h2>
+      <div class="small-muted">Past predictions for {{ user or 'anonymous' }} — saved per session/user.</div>
+    </div>
+    <div>
+      <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    </div>
+  </div>
+
+  <div class="glass">
+    <div class="controls mb-2">
+      <input id="searchInput" class="form-control" placeholder="Search by date, risk, or values (type and press Enter)">
+
+      <select id="filterRisk" class="form-select" style="max-width:180px;">
+        <option value="">All risks</option>
+        <option value="high">High risk</option>
+        <option value="low">Low risk</option>
+      </select>
+
+      <input id="fromDate" type="date" class="form-control" style="max-width:170px;" title="From date">
+      <input id="toDate" type="date" class="form-control" style="max-width:170px;" title="To date">
+
+      <button id="exportCsv" class="btn btn-primary" title="Export displayed rows">Export CSV</button>
+
+      <div style="flex:1"></div>
+
+      <div class="small-muted">Total entries: <span id="totalCount">0</span></div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="historyTable" class="history-table">
+        <thead>
+          <tr>
+            <th style="width:80px">#</th>
+            <th style="min-width:160px">When</th>
+            <th style="min-width:220px">Inputs</th>
+            <th style="width:120px">Prediction</th>
+            <th style="width:120px">Probability</th>
+            <th style="width:100px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          {% for e in entries %}
+          <tr data-entry='{{ e|tojson|safe }}'>
+            <td>{{ e.id }}</td>
+            <td>{{ e.created_at }}</td>
+            <td style="font-family:monospace; font-size:0.92rem; color:#333; max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              {{ e.input | tojson }}
+            </td>
+            <td>
+              {% if e.prediction == 1 %}
+                <span class="badge-risk">High</span>
+              {% else %}
+                <span class="badge-safe">Low</span>
+              {% endif %}
+            </td>
+            <td>{{ (e.probability * 100)|round(1) }}%</td>
+            <td class="row-actions">
+              <button class="btn btn-sm btn-outline-secondary view-btn">View</button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6"><div class="empty">No history entries yet.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="pager" class="pagination mt-3"></div>
+  </div>
+</div>
+
+<!-- Modal: View entry (interactive) -->
+<div class="modal fade" id="entryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Prediction details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="split">
+          <div style="flex:0 0 360px; text-align:center;">
+            <div style="max-width:260px;margin:0 auto;">
+              <canvas id="entryProbChart" height="220"></canvas>
+            </div>
+            <div class="helper" id="entryRiskLabel"></div>
+            <div class="modal-actions" style="justify-content:center; margin-top:10px;">
+              <button id="copyJsonBtn" class="btn btn-outline-secondary btn-sm">Copy JSON</button>
+              <button id="downloadJsonBtn" class="btn btn-outline-secondary btn-sm">Download JSON</button>
+            </div>
+          </div>
+
+          <div style="flex:1;">
+            <h6 style="margin-top:0">Input features (click value to copy)</h6>
+            <table class="feature-table" id="featureTable">
+              <!-- rows populated dynamically -->
+            </table>
+
+            <div style="margin-top:12px;">
+              <h6 style="margin-bottom:8px">Full JSON</h6>
+              <div id="entryJson" class="json-panel"></div>
+              <div class="copy-hint">Tip: click a row in the input table to copy its value to clipboard.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+/* Client-side history enhancements: search, filter, paging, export, interactive View modal (no replay) */
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = Array.from(document.querySelectorAll('#historyBody tr')).filter(r => r.dataset.entry);
+  const perPage = 8;
+  let state = { filtered: rows.slice(), page: 1 };
+
+  const totalCountEl = document.getElementById('totalCount');
+  const historyBody = document.getElementById('historyBody');
+  const pager = document.getElementById('pager');
+
+  // utilities
+  function parseEntryRow(row) {
+    try { return JSON.parse(row.dataset.entry); } catch (e) { return null; }
+  }
+
+  function applyFilters() {
+    const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+    const risk = document.getElementById('filterRisk').value;
+    const from = document.getElementById('fromDate').value;
+    const to = document.getElementById('toDate').value;
+
+    state.filtered = rows.filter(r => {
+      const e = parseEntryRow(r);
+      if (!e) return false;
+
+      if (risk) {
+        if (risk === 'high' && e.prediction != 1) return false;
+        if (risk === 'low' && e.prediction != 0) return false;
+      }
+
+      if (from && new Date(e.created_at) < new Date(from)) return false;
+      if (to && new Date(e.created_at) > new Date(to + 'T23:59:59')) return false;
+
+      if (!q) return true;
+      const hay = (JSON.stringify(e).toLowerCase());
+      return hay.includes(q);
+    });
+
+    state.page = 1;
+    render();
+  }
+
+  function render() {
+    const start = (state.page - 1) * perPage;
+    const visible = state.filtered.slice(start, start + perPage);
+
+    historyBody.innerHTML = '';
+    if (visible.length === 0) {
+      historyBody.innerHTML = '<tr><td colspan="6"><div class="empty">No matching entries.</div></td></tr>';
+    } else {
+      visible.forEach(r => historyBody.appendChild(r));
+    }
+
+    totalCountEl.innerText = state.filtered.length;
+    renderPager();
+  }
+
+  function renderPager() {
+    pager.innerHTML = '';
+    const totalPages = Math.max(1, Math.ceil(state.filtered.length / perPage));
+    const createBtn = (label, p, disabled=false) => {
+      const b = document.createElement('button');
+      b.className = 'btn btn-sm ' + (p===state.page ? 'btn-primary' : 'btn-outline-secondary');
+      b.innerText = label;
+      b.disabled = disabled;
+      b.addEventListener('click', () => { state.page = p; render(); });
+      return b;
+    };
+    pager.appendChild(createBtn('« Prev', Math.max(1, state.page-1), state.page===1));
+    const start = Math.max(1, state.page - 2);
+    const end = Math.min(totalPages, start + 4);
+    for (let p = start; p <= end; p++) pager.appendChild(createBtn(p, p));
+    pager.appendChild(createBtn('Next »', Math.min(totalPages, state.page+1), state.page===totalPages));
+  }
+
+  applyFilters();
+
+  document.getElementById('searchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyFilters(); } });
+  document.getElementById('filterRisk').addEventListener('change', applyFilters);
+  document.getElementById('fromDate').addEventListener('change', applyFilters);
+  document.getElementById('toDate').addEventListener('change', applyFilters);
+
+  // Export visible rows to CSV
+  document.getElementById('exportCsv').addEventListener('click', () => {
+    const visible = state.filtered.slice((state.page-1)*perPage, (state.page)*perPage);
+    if (visible.length === 0) { alert('No rows to export'); return; }
+    const headers = ['id','created_at','prediction','probability','input'];
+    const lines = [headers.join(',')];
+    visible.forEach(r => {
+      const e = parseEntryRow(r);
+      if (!e) return;
+      const csvLine = [
+        e.id,
+        `"${e.created_at}"`,
+        e.prediction,
+        e.probability,
+        `"${JSON.stringify(e.input).replace(/"/g,'""')}"`
+      ];
+      lines.push(csvLine.join(','));
+    });
+    const blob = new Blob([lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `history_export_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  // Modal and interactive view
+  const entryModalEl = document.getElementById('entryModal');
+  const entryModal = new bootstrap.Modal(entryModalEl, {});
+  const entryJsonEl = document.getElementById('entryJson');
+  const featureTable = document.getElementById('featureTable');
+  const entryRiskLabel = document.getElementById('entryRiskLabel');
+  const copyJsonBtn = document.getElementById('copyJsonBtn');
+  const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+  let chartInstance = null;
+  let currentEntry = null;
+
+  function drawProbChart(prob) {
+    const ctx = document.getElementById('entryProbChart').getContext('2d');
+    if (chartInstance) try { chartInstance.destroy(); } catch(e){}
+    chartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels: ['Risk','Safe'], datasets: [{ data: [prob, 1-prob] }] },
+      options: { cutout: '70%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+  }
+
+  // populate feature table and JSON panel
+  function populateModal(e) {
+    currentEntry = e;
+    // draw chart
+    const prob = Number(e.probability || 0);
+    drawProbChart(prob);
+
+    // risk label
+    const pct = (prob * 100).toFixed(1) + '%';
+    entryRiskLabel.innerHTML = `<strong style="font-size:1.05rem">${e.prediction == 1 ? '<span style="color:#b91c1c">High risk</span>' : '<span style="color:#136f3a">Low risk</span>'}</strong><div class="small-muted">Probability: ${pct}</div>`;
+
+    // feature table
+    featureTable.innerHTML = '';
+    const input = e.input || e.input_json || e.input || {};
+    // if e.input is an object with numeric keys, use it; else try to parse e.input if string
+    const src = (typeof input === 'string') ? (() => { try { return JSON.parse(input); } catch { return {}; } })() : input;
+
+    // consistent ordering: use common feature order if keys present
+    const featureOrder = ['age','sex','cp','trestbps','chol','fbs','restecg','thalach','exang','oldpeak','slope','ca','thal'];
+    const keys = Object.keys(src).length ? featureOrder.filter(k => k in src).concat(Object.keys(src).filter(k => !featureOrder.includes(k))) : Object.keys(e.input || {});
+    const seen = new Set();
+    keys.forEach(k => {
+      if (seen.has(k)) return;
+      seen.add(k);
+      const val = src[k];
+      const tr = document.createElement('tr');
+      const tdKey = document.createElement('td'); tdKey.className='key'; tdKey.innerText = k;
+      const tdVal = document.createElement('td'); tdVal.className='value'; tdVal.innerText = (typeof val === 'object' ? JSON.stringify(val) : String(val));
+      tdVal.title = 'Click to copy value';
+      tdVal.addEventListener('click', () => {
+        navigator.clipboard.writeText(tdVal.innerText).then(() => {
+          tdVal.style.background = '#eafaf0';
+          setTimeout(()=> tdVal.style.background = '', 500);
+        });
+      });
+      tr.appendChild(tdKey);
+      tr.appendChild(tdVal);
+      featureTable.appendChild(tr);
+    });
+
+    // full JSON panel
+    entryJsonEl.innerText = JSON.stringify(e, null, 2);
+
+    // copy/download handlers
+    copyJsonBtn.onclick = () => {
+      navigator.clipboard.writeText(JSON.stringify(e, null, 2)).then(() => {
+        copyJsonBtn.innerText = 'Copied';
+        setTimeout(()=> copyJsonBtn.innerText = 'Copy JSON', 900);
+      });
+    };
+
+    downloadJsonBtn.onclick = () => {
+      const blob = new Blob([JSON.stringify(e, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `history_entry_${e.id || 'entry'}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
+  }
+
+  // delegate view clicks
+  document.querySelector('#historyBody').addEventListener('click', (ev) => {
+    const btn = ev.target.closest('button.view-btn');
+    if (!btn) return;
+    const tr = ev.target.closest('tr');
+    if (!tr || !tr.dataset.entry) return;
+    const entry = parseEntryRow(tr);
+    if (!entry) return;
+    populateModal(entry);
+    entryModal.show();
+  });
+
+  // ensure chart is destroyed when modal is hidden
+  entryModalEl.addEventListener('hidden.bs.modal', () => {
+    if (chartInstance) try { chartInstance.destroy(); } catch(e) {}
+    chartInstance = null;
+    currentEntry = null;
+  });
+
+});
+</script>
+
+{% endblock %}

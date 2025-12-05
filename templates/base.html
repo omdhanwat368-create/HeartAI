@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>HeartAI - Heart Disease Predictor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="{{ url_for('landing') }}">HeartAI</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('landing') }}">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Predict</a></li>
+          <li class="nav-item"><a class="nav-link" href="#learn">Learn</a></li>
+          {% if session.user %}
+            <li class="nav-item"><span class="nav-link small text-muted">{{ session.user }}</span></li>
+            <li class="nav-item"><a class="btn btn-outline-primary btn-sm ms-2" href="{{ url_for('history') }}">History</a></li>
+            <li class="nav-item"><a class="btn btn-primary btn-sm ms-2" href="{{ url_for('logout') }}">Logout</a></li>
+          {% else %}
+            <li class="nav-item"><a class="btn btn-outline-primary btn-sm ms-2" href="{{ url_for('login') }}">Login</a></li>
+            <li class="nav-item"><a class="btn btn-primary btn-sm ms-2" href="{{ url_for('register') }}">Register</a></li>
+            <a class="btn btn-ghost" href="{{ url_for('chat_page') }}">Ask HealthAssist</a>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-5">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

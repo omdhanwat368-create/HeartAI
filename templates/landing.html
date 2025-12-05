@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Final Landing — Refined Hero, centered features, Option A nav sizing, smaller wheel shifted left -->
+<style>
+:root{ --accent:#e63946; --muted:#6b7280; --glass:#ffffffea; }
+
+/* NAV override (Option A) */
+.navbar .navbar-brand { font-size: 1.45rem !important; font-weight: 800; letter-spacing: -0.2px; }
+.navbar .nav-link { font-size: 1.06rem !important; font-weight: 600; padding: .45rem .6rem; color: #222 !important; }
+.navbar .btn { font-size: 0.98rem; }
+
+/* HERO */
+.hero {
+  padding: 5.5rem 0 3.25rem;
+  display:flex;
+  gap:40px;
+  align-items:center;
+  justify-content:space-between;
+}
+.hero-left { max-width:580px; }
+.hero-title {
+  font-size:2.4rem;
+  font-weight:900;
+  line-height:1.04;
+  margin-bottom:.6rem;
+}
+.hero-title .ai { color:var(--accent); display:inline-block; animation:heartbeat 2s infinite; transform-origin:center; }
+@keyframes heartbeat { 0%,100%{transform:scale(1)}20%{transform:scale(1.06)}40%{transform:scale(1)}60%{transform:scale(1.05)} }
+
+.lead-muted { color:var(--muted); font-size:1.02rem; margin-bottom:1.2rem; }
+
+/* CTAs */
+.btn-primary-hero {
+  background:linear-gradient(90deg,#ff7a7a 0%,#e63946 60%);
+  color:#fff; padding:.85rem 1.15rem; border-radius:10px; font-weight:800; font-size:0.98rem; border:none;
+  box-shadow:0 10px 26px rgba(230,57,70,0.12);
+}
+.btn-ghost { border:2px solid rgba(230,57,70,0.12); color:var(--accent); padding:.7rem 1rem; border-radius:10px; font-weight:700; }
+
+/* HERO IMAGE CARD (SVG friendly) */
+.hero-right { width:44%; display:flex; justify-content:center; }
+.hero-card {
+  width:100%; max-width:520px; border-radius:32px; overflow:hidden; padding:1.2rem;
+  background:linear-gradient(180deg,#fff7f6,#fffaf9); box-shadow:0 18px 48px rgba(15,23,42,0.06);
+  display:flex; align-items:center; justify-content:center; border:1px solid rgba(230,57,70,0.03);
+}
+.hero-card img, .hero-card svg {
+  width:92%; height:auto; max-height:360px; object-fit:contain; display:block;
+}
+
+/* FEATURES — refined three blocks under hero-left */
+.features { margin-top:2.2rem; }
+.features .row { max-width:980px; margin:0 auto; justify-content:center; }
+.feature-card {
+  background:#fff; border-radius:12px; padding:1rem; min-height:98px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.04); display:flex; gap:.7rem; align-items:flex-start; transition:.18s; border:1px solid rgba(15,23,42,0.02);
+}
+.feature-card:hover { transform:translateY(-6px); box-shadow:0 18px 44px rgba(0,0,0,0.07); }
+.feature-icon { flex:0 0 56px; width:56px; height:56px; border-radius:10px; display:grid; place-items:center; box-shadow:0 6px 18px rgba(0,0,0,0.03); background:linear-gradient(180deg,#fff,#fffefc); }
+.feature-title { font-size:1.04rem; font-weight:800; }
+.feature-card .text-muted { font-size:.95rem; }
+
+/* DEMO layout: wheel moved to left with professional card layout */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  border-radius:14px;
+  padding:1.0rem; /* reduced */
+  box-shadow:0 10px 28px rgba(0,0,0,0.05);
+  border:1px solid rgba(0,0,0,0.03);
+}
+.demo-row { display:flex; gap:18px; align-items:flex-start; }
+.demo-left { flex:0 0 320px; display:flex; flex-direction:column; align-items:center; }
+.demo-right { flex:1 1 auto; }
+.chart-card { width:100%; max-width:320px; border-radius:12px; padding:14px; background:linear-gradient(180deg,#fff,#fffefc); box-shadow:0 10px 28px rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.02); }
+#demo-chart { width:260px !important; height:260px !important; display:block; margin:6px auto 4px; }
+.chart-center-text { text-align:center; font-weight:800; font-size:1.25rem; color:#111; }
+
+/* Result alert styling */
+#demo-alert { font-weight:700; border-radius:10px; padding:.9rem 1rem; }
+
+/* Solution box */
+.solution-box { margin-top:2.2rem; padding:1.6rem; border-radius:12px; background:#ffffffd9; box-shadow:0 10px 36px rgba(0,0,0,0.05); }
+
+/* Footer */
+footer .text-muted { font-size:.95rem; color:var(--muted); }
+
+/* Responsive */
+@media (max-width:992px){
+  .hero { flex-direction:column-reverse; text-align:center; gap:1.6rem; padding:3rem 0; }
+  .hero-right, .hero-left { width:100%; }
+  .hero-card { max-width:380px; margin:0 auto; }
+  .hero-title { font-size:2rem; }
+  .demo-row { flex-direction:column; }
+  .demo-left { order:2; width:100%; flex:unset; }
+  .demo-right { order:1; }
+  #demo-chart { width:220px !important; height:220px !important; }
+}
+</style>
+
+<!-- ========= Container wrapper for alignment ========= -->
+<div class="container">
+
+  <!-- HERO -->
+  <section class="hero" aria-label="Hero">
+    <div class="hero-left" data-aos="fade-up">
+      <div class="badge-ghost small">AI • Healthcare</div>
+
+      <h1 class="hero-title">
+        Early heart risk detection simple, fast, trustworthy.
+        <span class="ai">AI</span>
+      </h1>
+
+      <p class="lead-muted">Predict heart disease risk instantly using clinically relevant data, calibrated probabilities, and explainable ML.</p>
+
+      <div class="d-flex flex-wrap gap-3 align-items-center">
+        <a href="{{ url_for('login') }}" class="btn btn-primary-hero">Login</a>
+        <a href="{{ url_for('register') }}" class="btn btn-ghost">Create account</a>
+      </div>
+
+      <!-- FEATURES centered under hero-left (3 refined blocks) -->
+      <!-- features removed as requested -->
+    </div>
+
+    <div class="hero-right" data-aos="zoom-in" aria-hidden="false">
+      <div class="hero-card" role="img" aria-label="Heart illustration">
+        <img src="{{ url_for('static', filename='images/hero-heart.svg') }}" alt="Heart AI hero">
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES MOVED BELOW HERO IMAGE ===== -->
+  <section class="mt-4 mb-4" data-aos="fade-up">
+    <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center text-center" style="max-width:900px; margin:0 auto;">
+
+      <div class="col">
+        <div class="feature-card" style="flex-direction:column; align-items:center; text-align:center; padding:1.4rem;">
+          <div class="feature-icon" style="margin-bottom:.6rem;">
+            <img src="{{ url_for('static', filename='images/feature-screening.svg') }}" width="34" />
+          </div>
+          <div class="feature-title" style="font-size:1.15rem;">Predictive Screening</div>
+          <div class="text-muted mt-2" style="font-size:.95rem;">Fast, explainable risk scoring.</div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="feature-card" style="flex-direction:column; align-items:center; text-align:center; padding:1.4rem;">
+          <div class="feature-icon" style="margin-bottom:.6rem;">
+            <img src="{{ url_for('static', filename='images/feature-history.svg') }}" width="34" />
+          </div>
+          <div class="feature-title" style="font-size:1.15rem;">Explainability</div>
+          <div class="text-muted mt-2" style="font-size:.95rem;">Feature importance & calibration.</div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="feature-card" style="flex-direction:column; align-items:center; text-align:center; padding:1.4rem;">
+          <div class="feature-icon" style="margin-bottom:.6rem;">
+            <img src="{{ url_for('static', filename='images/feature-ai.svg') }}" width="34" />
+          </div>
+          <div class="feature-title" style="font-size:1.15rem;">High Accuracy</div>
+          <div class="text-muted mt-2" style="font-size:.95rem;">Trained on clinical datasets.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div> <!-- container end -->
+
+<!-- ========== LIVE DEMO (wheel shifted left) ========== -->
+<section class="container mt-5" id="predict">
+  <div class="glass" data-aos="fade-up">
+    <h2 class="section-title">Live demo — Predict risk</h2>
+    <p class="text-muted mb-3" style="font-size:1.03rem;">Enter values or use presets to test the AI model.</p>
+
+    <div class="demo-row">
+      <!-- LEFT: Wheel / Chart -->
+      <div class="demo-left">
+        <div class="chart-card">
+          <div class="chart-center-text" id="chart-center-label">Probability</div>
+          <canvas id="demo-chart"></canvas>
+          <div class="chart-center-text small text-muted" id="chart-sub-label">— model calibrated —</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Form -->
+      <div class="demo-right">
+        <form id="demo-predict" class="row g-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Age</label>
+              <input name="age" class="form-control form-control-lg" value="45"/>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Sex</label>
+              <select name="sex" class="form-select form-select-lg">
+                <option value="1">Male</option>
+                <option value="0">Female</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Resting BP</label>
+              <input name="trestbps" class="form-control form-control-lg" value="130"/>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Cholesterol</label>
+              <input name="chol" class="form-control form-control-lg" value="210"/>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Max HR</label>
+              <input name="thalach" class="form-control form-control-lg" value="150"/>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Oldpeak</label>
+              <input name="oldpeak" class="form-control form-control-lg" value="1.0"/>
+            </div>
+
+            <!-- hidden -->
+            <input type="hidden" name="cp" value="0"/>
+            <input type="hidden" name="fbs" value="0"/>
+            <input type="hidden" name="restecg" value="1"/>
+            <input type="hidden" name="exang" value="0"/>
+            <input type="hidden" name="slope" value="2"/>
+            <input type="hidden" name="ca" value="0"/>
+            <input type="hidden" name="thal" value="2"/>
+
+            <div class="col-12 mt-3 d-flex gap-3">
+              <button type="button" id="run-demo" class="btn btn-primary btn-lg px-4">Predict</button>
+              <button type="button" id="preset-low" class="btn btn-outline-secondary btn-lg px-4">Low-risk Preset</button>
+            </div>
+
+            <div id="demo-result" class="col-12 mt-4" style="display:none">
+              <div id="demo-alert" class="alert"></div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========== SOLUTION OVERVIEW ========== -->
+<section class="container mt-4">
+  <div class="solution-box" data-aos="fade-up">
+    <h3 class="fw-bold mb-3">Solution Overview</h3>
+    <ul class="text-muted" style="font-size:1.05rem; margin-left:1rem;">
+      <li> Calibrated Random Forest for reliable probabilities</li>
+      <li> Per-user patient history stored in SQLite</li>
+      <li> Docker-ready & CI friendly</li>
+      <li> Feature importance export for explainability</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="container text-center mt-5 mb-5">
+  <div class="text-muted small">By Manoheet Dhanwat</div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+AOS.init({ duration: 600, once: true });
+
+function safeDestroyChart(c){ try{ if(c) c.destroy(); }catch(e){} }
+
+// Chart center plugin (renders percentage in center)
+const centerTextPlugin = {
+  id: 'centerText',
+  beforeDraw(chart) {
+    const {ctx, width, height} = chart;
+    const center = chart.config.options.plugins.centerText;
+    if (!center) return;
+    ctx.save();
+    const fontSize = center.fontSize || Math.round(Math.min(width, height) / 8);
+    ctx.font = `700 ${fontSize}px sans-serif`;
+    ctx.fillStyle = center.color || '#111';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(center.text || '', width / 2, height / 2);
+    ctx.restore();
+  }
+};
+
+Chart.register(centerTextPlugin);
+
+document.addEventListener("DOMContentLoaded", ()=> {
+  let demoChart = null;
+  const runBtn = document.getElementById("run-demo");
+  const presetLow = document.getElementById("preset-low");
+  const alertBox = document.getElementById("demo-alert");
+  const resultDiv = document.getElementById("demo-result");
+  const chartCenterLabel = document.getElementById('chart-center-label');
+
+  presetLow.addEventListener("click", ()=>{
+    document.querySelector("input[name=age]").value = 29;
+    document.querySelector("select[name=sex]").value = 1;
+    document.querySelector("input[name=trestbps]").value = 100;
+    document.querySelector("input[name=chol]").value = 170;
+    document.querySelector("input[name=thalach]").value = 170;
+    document.querySelector("input[name=oldpeak]").value = 0.0;
+  });
+
+  runBtn.addEventListener("click", async ()=>{
+    const form = document.getElementById("demo-predict");
+    const data = Object.fromEntries(new FormData(form).entries());
+    for (const k in data) data[k] = Number(data[k]);
+
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+      resultDiv.style.display = "block";
+
+      alertBox.className = json.prediction === 1 ? "alert alert-danger" : "alert alert-success";
+      alertBox.innerText = `${json.prediction === 1 ? "High risk" : "Low risk"} — probability ${(json.probability*100).toFixed(1)}%`;
+
+      // update center label
+      document.getElementById('chart-center-label').innerText = `${(json.probability*100).toFixed(0)}%`;
+
+      safeDestroyChart(demoChart);
+      const ctx = document.getElementById("demo-chart").getContext("2d");
+      demoChart = new Chart(ctx, {
+        type: "doughnut",
+        data: { labels: ["Risk","Safe"], datasets: [{ data: [json.probability, 1-json.probability], hoverOffset:6 }] },
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          cutout: '70%',
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { boxWidth:10, padding:12 } },
+            centerText: { text: `${(json.probability*100).toFixed(0)}%`, fontSize: null, color: '#111' }
+          }
+        }
+      });
+
+    } catch(err) {
+      resultDiv.style.display = "block";
+      alertBox.className = "alert alert-warning";
+      alertBox.innerText = "Unable to reach local prediction API.";
+      document.getElementById('chart-center-label').innerText = '—';
+      safeDestroyChart(demoChart);
+    }
+  });
+});
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Index (Dashboard) — Full attribute form (all 13 features) -->
+<style>
+:root{
+  --accent: #e63946;
+  --muted: #6b7280;
+  --glass: rgba(255,255,255,0.92);
+}
+.container { max-width:1100px; }
+.header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; }
+.header h2 { font-size:1.25rem; font-weight:800; margin:0; }
+.header .muted { color:var(--muted); }
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  border-radius:14px;
+  padding:1.1rem;
+  box-shadow: 0 16px 48px rgba(15,23,42,0.06);
+  border:1px solid rgba(15,23,42,0.03);
+}
+
+/* grid layout */
+.grid { display:grid; grid-template-columns: 1fr 360px; gap:22px; align-items:start; }
+@media (max-width:992px){ .grid { grid-template-columns: 1fr; } }
+
+.form-card h4 { margin:0 0 .6rem 0; font-weight:800; }
+.form-label { font-weight:700; color:#111; font-size:.95rem; }
+.form-control, .form-select { border-radius:10px; padding:.6rem .8rem; }
+
+.btn-primary {
+  background: linear-gradient(90deg,#ff7a7a 0%,var(--accent) 60%);
+  border:none; color:#fff; font-weight:800; border-radius:10px; padding:.6rem 1rem;
+  box-shadow: 0 10px 26px rgba(230,57,70,0.12);
+}
+.btn-outline-secondary { border-radius:10px; padding:.55rem .9rem; }
+
+.result-wrap { max-width:300px; margin:8px auto 0; }
+#result-alert { font-weight:700; border-radius:10px; padding:.7rem 1rem; }
+
+.metrics-card { padding:1rem; border-radius:12px; display:flex; flex-direction:column; gap:.6rem; height:100%; }
+.metrics-card h5 { margin:0; font-weight:800; }
+.metrics-list { font-size:.95rem; color:var(--muted); margin-top:.4rem; }
+
+.small-muted { color:var(--muted); font-size:.9rem; }
+</style>
+
+<div class="container mt-3">
+  <div class="header">
+    <div>
+      <h2>Dashboard — Predict</h2>
+      <div class="small-muted">Complete form — all attributes used by the model</div>
+    </div>
+    <div>
+      <a class="btn btn-outline-secondary" href="{{ url_for('landing') }}">Home</a>
+      {% if session.user %}
+      <a class="btn btn-outline-secondary" href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="glass">
+    <div class="grid">
+
+      <!-- LEFT: full form -->
+      <div class="form-card">
+        <h4>Predict Heart Disease — Full Attributes</h4>
+        <form id="predict-form" class="row g-3">
+
+          <div class="col-md-4">
+            <label class="form-label">Age</label>
+            <input name="age" class="form-control" type="number" step="1" value="45" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Sex</label>
+            <select name="sex" class="form-select">
+              <option value="1">Male</option>
+              <option value="0">Female</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Chest Pain (cp)</label>
+            <select name="cp" class="form-select">
+              <option value="0">typical angina (0)</option>
+              <option value="1">atypical angina (1)</option>
+              <option value="2">non-anginal pain (2)</option>
+              <option value="3">asymptomatic (3)</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Resting BP (trestbps)</label>
+            <input name="trestbps" class="form-control" type="number" step="1" value="120">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Cholesterol (chol)</label>
+            <input name="chol" class="form-control" type="number" step="1" value="200">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Fasting blood sugar (fbs)</label>
+            <select name="fbs" class="form-select">
+              <option value="0">&lt;= 120 mg/dl (0)</option>
+              <option value="1">&gt; 120 mg/dl (1)</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Rest ECG (restecg)</label>
+            <select name="restecg" class="form-select">
+              <option value="0">normal (0)</option>
+              <option value="1">ST-T wave abnormality (1)</option>
+              <option value="2">left ventricular hypertrophy (2)</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Max HR (thalach)</label>
+            <input name="thalach" class="form-control" type="number" step="1" value="150">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Exercise induced angina (exang)</label>
+            <select name="exang" class="form-select">
+              <option value="0">No (0)</option>
+              <option value="1">Yes (1)</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Oldpeak</label>
+            <input name="oldpeak" class="form-control" type="number" step="0.1" value="0.0">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">ST slope (slope)</label>
+            <select name="slope" class="form-select">
+              <option value="0">upsloping (0)</option>
+              <option value="1">flat (1)</option>
+              <option value="2">downsloping (2)</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Number of major vessels (ca)</label>
+            <select name="ca" class="form-select">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Thal</label>
+            <select name="thal" class="form-select">
+              <option value="1">normal (1)</option>
+              <option value="2">fixed defect (2)</option>
+              <option value="3">reversible defect (3)</option>
+            </select>
+          </div>
+
+          <div class="col-12 d-flex gap-2 mt-2">
+            <button id="predict-btn" type="button" class="btn btn-primary">Predict</button>
+            <button id="clear-btn" type="button" class="btn btn-outline-secondary">Clear</button>
+            <div style="flex:1"></div>
+            <div class="small-muted">All inputs mapped to model features</div>
+          </div>
+
+          <div id="result" class="col-12 mt-3" style="display:none;">
+            <div id="result-alert" class="alert"></div>
+            <div class="result-wrap">
+              <canvas id="result-chart" height="140"></canvas>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- RIGHT: metrics -->
+      <div class="metrics-card">
+        <h5>Model Metrics</h5>
+        <div id="metrics" class="metrics-list">Loading metrics…</div>
+        <hr>
+        <div class="small-muted">Predictions are logged to your history (if logged in).</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+/* Keep API endpoint /api/predict — change if your backend uses /predict directly */
+const PREDICT_URL = '/api/predict';
+
+function safeDestroyChart(c) {
+  try { if (window.resChart && typeof window.resChart.destroy === 'function') window.resChart.destroy(); } catch(e) {}
+}
+
+async function fetchMetrics() {
+  try {
+    const r = await fetch('/api/metrics');
+    const j = await r.json();
+    const metricsDiv = document.getElementById('metrics');
+    if (!metricsDiv) return;
+    if (j.error) {
+      metricsDiv.innerHTML = '<div class="small-muted">Metrics not available. Generate models/metrics.json.</div>';
+      return;
+    }
+    let html = `<div><strong>Best model:</strong> ${j.best_model || '-'}</div>`;
+    const calibAuc = j.calibrated_test_auc ?? j.calibrated_auc ?? null;
+    if (calibAuc !== null) html += `<div class="small-muted">Calibrated AUC: ${Number(calibAuc).toFixed(3)}</div>`;
+    if (j.models) {
+      html += '<ul style="margin-left:12px; margin-top:8px;">';
+      for (const m in j.models) {
+        const auc = j.models[m].roc_auc ? Number(j.models[m].roc_auc).toFixed(3) : '-';
+        const acc = j.models[m].accuracy ? Number(j.models[m].accuracy).toFixed(3) : '-';
+        html += `<li>${m}: AUC ${auc}, acc ${acc}</li>`;
+      }
+      html += '</ul>';
+    }
+    metricsDiv.innerHTML = html;
+  } catch (e) {
+    const metricsDiv = document.getElementById('metrics');
+    if (metricsDiv) metricsDiv.innerHTML = '<div class="small-muted">Could not load metrics.</div>';
+    console.error(e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  fetchMetrics();
+
+  const form = document.getElementById('predict-form');
+  const predictBtn = document.getElementById('predict-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  const resultEl = document.getElementById('result');
+  const resultAlert = document.getElementById('result-alert');
+
+  clearBtn.addEventListener('click', () => {
+    form.reset();
+    resultEl.style.display = 'none';
+    safeDestroyChart();
+  });
+
+  predictBtn.addEventListener('click', async () => {
+    // collect and coerce
+    const raw = Object.fromEntries(new FormData(form).entries());
+    const data = {};
+    for (const [k,v] of Object.entries(raw)) {
+      const n = Number(v);
+      data[k] = (v === '' || Number.isNaN(n)) ? 0 : n;
+    }
+
+    predictBtn.disabled = true;
+    const prevText = predictBtn.innerText;
+    predictBtn.innerText = 'Predicting...';
+
+    try {
+      const resp = await fetch(PREDICT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const text = await resp.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch(e) { json = null; }
+
+      if (!resp.ok) {
+        const errMsg = json && json.error ? json.error : `Server returned ${resp.status}`;
+        throw new Error(errMsg + (typeof text === 'string' ? ` — ${text}` : ''));
+      }
+
+      // success
+      resultEl.style.display = 'block';
+      if (json.prediction === 1) {
+        resultAlert.className = 'alert alert-danger';
+        resultAlert.innerText = `High risk — probability ${(json.probability*100).toFixed(1)}%`;
+      } else {
+        resultAlert.className = 'alert alert-success';
+        resultAlert.innerText = `Low risk — probability ${(json.probability*100).toFixed(1)}%`;
+      }
+
+      safeDestroyChart();
+      const ctx = document.getElementById('result-chart').getContext('2d');
+      window.resChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: ['Risk','Safe'], datasets: [{ data: [json.probability, 1-json.probability], hoverOffset:6 }] },
+        options: { cutout: '70%', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      });
+
+    } catch (err) {
+      resultEl.style.display = 'block';
+      resultAlert.className = 'alert alert-warning';
+      resultAlert.innerText = 'Request failed: ' + (err.message || 'check backend');
+      console.error('Predict error:', err);
+    } finally {
+      predictBtn.disabled = false;
+      predictBtn.innerText = prevText;
+    }
+  });
+});
+</script>
+
+{% endblock %}

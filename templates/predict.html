@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h4">Predict</h2>
+      <div class="text-muted small">Enter patient features and get a risk score</div>
+    </div>
+    <div>
+      <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Back</a>
+    </div>
+  </div>
+
+  <div class="glass p-4">
+    <form id="predict-form" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Age</label>
+        <input name="age" class="form-control" value="45">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Sex</label>
+        <select name="sex" class="form-select">
+          <option value="1">Male</option>
+          <option value="0">Female</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Resting BP</label>
+        <input name="trestbps" class="form-control" value="130">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Chol</label>
+        <input name="chol" class="form-control" value="210">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Max HR</label>
+        <input name="thalach" class="form-control" value="150">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Oldpeak</label>
+        <input name="oldpeak" class="form-control" value="1.0">
+      </div>
+
+      <!-- hidden defaults used by model -->
+      <input type="hidden" name="cp" value="0">
+      <input type="hidden" name="fbs" value="0">
+      <input type="hidden" name="restecg" value="1">
+      <input type="hidden" name="exang" value="0">
+      <input type="hidden" name="slope" value="2">
+      <input type="hidden" name="ca" value="0">
+      <input type="hidden" name="thal" value="2">
+
+      <div class="col-12 d-flex gap-2 mt-3">
+        <button id="predict-btn" type="button" class="btn btn-primary">Predict Now</button>
+        <button id="clear-btn" type="button" class="btn btn-outline-secondary">Clear</button>
+      </div>
+
+      <div id="result" style="display:none;" class="col-12 mt-4">
+        <div id="result-alert" class="alert"></div>
+        <canvas id="result-chart" height="150"></canvas>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function showResult(json){
+  document.getElementById('result').style.display = 'block';
+  const a = document.getElementById('result-alert');
+  if(json.prediction == 1){
+    a.className = 'alert alert-danger';
+    a.innerText = 'High risk — ' + (json.probability*100).toFixed(1) + '%';
+  } else {
+    a.className = 'alert alert-success';
+    a.innerText = 'Low risk — ' + (json.probability*100).toFixed(1) + '%';
+  }
+  if(window.resChart) window.resChart.destroy();
+  const ctx = document.getElementById('result-chart').getContext('2d');
+  window.resChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Risk','Safe'],
+      datasets: [{ data: [json.probability, 1-json.probability] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
+
+document.getElementById('predict-btn').addEventListener('click', async ()=>{
+  const data = Object.fromEntries(new FormData(document.getElementById('predict-form')).entries());
+  Object.keys(data).forEach(k => data[k] = Number(data[k]));
+  try{
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if(json.error){ alert(json.error); return; }
+    showResult(json);
+  } catch(e){
+    alert('Request failed — check backend (see terminal).');
+  }
+});
+
+document.getElementById('clear-btn').addEventListener('click', ()=>{
+  document.getElementById('predict-form').reset();
+  document.getElementById('result').style.display = 'none';
+  if(window.resChart) window.resChart.destroy();
+});
+</script>
+{% endblock %}

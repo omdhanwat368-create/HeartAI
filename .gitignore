@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Model files (optional)
+*.pkl
+
+# IDE
+.vscode/
+.idea/
+
+# SQLite DB
+app.db
+
+# Flask session
+instance/
